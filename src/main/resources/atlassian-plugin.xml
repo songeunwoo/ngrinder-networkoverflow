@@ -1,0 +1,6 @@
+<atlassian-plugin key="networkoverflow" name="Network Overflow Blocker" plugins-version="2">
+	<plugin-info>
+		<version>1.0.0</version>
+	</plugin-info>
+	<on-test-sampling key="networkoverflow" class="org.ngrinder.network.NetworkOverFlow" />
+</atlassian-plugin>
