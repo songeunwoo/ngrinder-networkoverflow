@@ -1,9 +1,13 @@
 package org.ngrinder.network;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.grinder.statistics.ImmutableStatisticsSet;
 import net.grinder.statistics.StatisticsIndexMap;
 import net.grinder.statistics.StatisticsIndexMap.LongIndex;
 
+import org.apache.commons.lang.StringUtils;
 import org.ngrinder.extension.OnTestSamplingRunnable;
 import org.ngrinder.model.PerfTest;
 import org.ngrinder.model.Status;
@@ -24,6 +28,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NetworkOverFlow.class);
 	private final IConfig config;
 	private long limit;
+	private List<String> allowedUser = new ArrayList<String>();
 
 	public NetworkOverFlow(IConfig config) {
 		this.config = config;
@@ -39,6 +44,10 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	@Override
 	public void startSampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService) {
 		limit = this.config.getSystemProperties().getPropertyInt("network.bandwidth.limit.megabyte", 128) * 1024 * 1024;
+		for (String each : StringUtils.split(
+						this.config.getSystemProperties().getProperty("network.bandwidth.allowed.user", ""), ',')) {
+			allowedUser.add(StringUtils.trim(each));
+		}
 	}
 
 	/*
@@ -52,9 +61,13 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	@Override
 	public void sampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService,
 					ImmutableStatisticsSet intervalStatistics, ImmutableStatisticsSet cumulativeStatistics) {
+		if (allowedUser.contains(perfTest.getCreatedUser().getUserId())) {
+			return;
+		}
 		LongIndex longIndex = singleConsole.getStatisticsIndexMap().getLongIndex(
 						StatisticsIndexMap.HTTP_PLUGIN_RESPONSE_LENGTH_KEY);
 		Long byteSize = intervalStatistics.getValue(longIndex);
+
 		if (byteSize > limit) {
 			String message = String.format(
 							"ERROR!! Network response over %d bytes per sec is not allowed due to the network capacity.\n"

@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>org.ngrinder</groupId>
 			<artifactId>ngrinder-core</artifactId>
-			<version>3.0.3-SNAPSHOT</version>
+			<version>3.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
