@@ -1,16 +1,19 @@
 package org.ngrinder.network;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import net.grinder.common.processidentity.AgentIdentity;
 import net.grinder.statistics.ImmutableStatisticsSet;
 import net.grinder.statistics.StatisticsIndexMap;
 import net.grinder.statistics.StatisticsIndexMap.LongIndex;
+import net.grinder.util.UnitUtil;
 
 import org.apache.commons.lang.StringUtils;
 import org.ngrinder.extension.OnTestSamplingRunnable;
+import org.ngrinder.model.AgentInfo;
 import org.ngrinder.model.PerfTest;
 import org.ngrinder.model.Status;
+import org.ngrinder.service.IAgentManagerService;
 import org.ngrinder.service.IConfig;
 import org.ngrinder.service.IPerfTestService;
 import org.ngrinder.service.ISingleConsole;
@@ -22,16 +25,18 @@ import org.slf4j.LoggerFactory;
  * large test.
  * 
  * @author JunHo Yoon
+ * @since 3.1.2
  * 
  */
 public class NetworkOverFlow implements OnTestSamplingRunnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NetworkOverFlow.class);
 	private final IConfig config;
-	private long limit;
-	private List<String> allowedUser = new ArrayList<String>();
+	private IAgentManagerService agentManagerService;
+	private ThreadLocal<Long> limit = new ThreadLocal<Long>();
 
-	public NetworkOverFlow(IConfig config) {
+	public NetworkOverFlow(IConfig config, IAgentManagerService agentManagerService) {
 		this.config = config;
+		this.agentManagerService = agentManagerService;
 	}
 
 	/*
@@ -43,11 +48,18 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	 */
 	@Override
 	public void startSampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService) {
-		limit = this.config.getSystemProperties().getPropertyInt("network.bandwidth.limit.megabyte", 128) * 1024 * 1024;
-		for (String each : StringUtils.split(
-						this.config.getSystemProperties().getProperty("network.bandwidth.allowed.user", ""), ',')) {
-			allowedUser.add(StringUtils.trim(each));
+		List<AgentIdentity> allAttachedAgents = singleConsole.getAllAttachedAgents();
+		int consolePort = singleConsole.getConsolePort();
+		float userSpecificAgentCount = 0;
+		for (AgentInfo each : agentManagerService.getLocalAgents()) {
+			if (each.getPort() == consolePort && StringUtils.contains(each.getRegion(), "owned")) {
+				userSpecificAgentCount++;
+			}
 		}
+		long configValue = this.config.getSystemProperties().getPropertyInt(
+						"ngrinder.pertest.bandwidth.limit.megabyte", 128) * 1024 * 1024;
+		int totalAgentSize = allAttachedAgents.size();
+		limit.set((long) (configValue / ((totalAgentSize - userSpecificAgentCount) / totalAgentSize)));
 	}
 
 	/*
@@ -61,21 +73,20 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	@Override
 	public void sampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService,
 					ImmutableStatisticsSet intervalStatistics, ImmutableStatisticsSet cumulativeStatistics) {
-		if (allowedUser.contains(perfTest.getCreatedUser().getUserId())) {
-			return;
-		}
 		LongIndex longIndex = singleConsole.getStatisticsIndexMap().getLongIndex(
 						StatisticsIndexMap.HTTP_PLUGIN_RESPONSE_LENGTH_KEY);
 		Long byteSize = intervalStatistics.getValue(longIndex);
+		if (byteSize != null) {
+			if (byteSize > limit.get()) {
+				String message = String.format("TOO MUCH TRAFFIC on this test. STOP IN FORCE.\n"
+								+ "- LIMIT : %d - SENT :%d", UnitUtil.byteCountToDisplaySize(limit.get()),
+								UnitUtil.byteCountToDisplaySize(byteSize));
+				LOGGER.info(message);
+				LOGGER.info("Forcely Stop the test {}", perfTest.getTestIdentifier());
+				perfTestService.markStatusAndProgress(perfTest, Status.ABNORMAL_TESTING, message);
+				return;
+			}
 
-		if (byteSize > limit) {
-			String message = String.format(
-							"ERROR!! Network response over %d bytes per sec is not allowed due to the network capacity.\n"
-											+ "%d bytes per sec were sent by this test.\n", limit, byteSize);
-			LOGGER.info(message);
-			LOGGER.info("Forcely Stop the test {}", perfTest.getTestIdentifier());
-			perfTestService.markStatusAndProgress(perfTest, Status.ABNORMAL_TESTING, message);
-			return;
 		}
 	}
 
@@ -88,8 +99,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	 */
 	@Override
 	public void endSampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService) {
-		// TODO Auto-generated method stub
-
+		limit.remove();
 	}
 
 }
