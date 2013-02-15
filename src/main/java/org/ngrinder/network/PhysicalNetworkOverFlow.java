@@ -59,7 +59,7 @@ public class PhysicalNetworkOverFlow implements OnPeriodicWorkingAgentCheckRunna
 					perfTestService.markStatusAndProgress(
 									perfTest,
 									Status.ABNORMAL_TESTING,
-									String.format("TOO MUCH TRAFFIC on this region. STOP IN FORCE.\n"
+									String.format("TOO MUCH TRAFFIC on this region. STOP BY FORCE.\n"
 													+ "- LIMIT/s: %s\n" + "- RX/s: %s / TX/s: %s",
 													UnitUtil.byteCountToDisplaySize(limit),
 													UnitUtil.byteCountToDisplaySize(totalRecieved),

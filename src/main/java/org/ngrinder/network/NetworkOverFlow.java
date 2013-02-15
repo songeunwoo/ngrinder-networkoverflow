@@ -89,7 +89,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 		if (byteSize != null) {
 			if (byteSize > limit.get()) {
 				if (perfTest.getStatus() != Status.ABNORMAL_TESTING) {
-					String message = String.format("TOO MUCH TRAFFIC on this test. STOP IN FORCE.\n"
+					String message = String.format("TOO MUCH TRAFFIC by this test. STOP BY FORCE.\n"
 									+ "- LIMIT : %s - SENT :%s", UnitUtil.byteCountToDisplaySize(limit.get()),
 									UnitUtil.byteCountToDisplaySize(byteSize));
 					LOGGER.info(message);
