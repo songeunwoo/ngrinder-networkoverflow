@@ -50,16 +50,26 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	public void startSampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService) {
 		List<AgentIdentity> allAttachedAgents = singleConsole.getAllAttachedAgents();
 		int consolePort = singleConsole.getConsolePort();
-		float userSpecificAgentCount = 0;
-		for (AgentInfo each : agentManagerService.getLocalAgents()) {
+		int userSpecificAgentCount = 0;
+		for (AgentInfo each : getLocalAgents()) {
 			if (each.getPort() == consolePort && StringUtils.contains(each.getRegion(), "owned")) {
 				userSpecificAgentCount++;
 			}
 		}
-		long configValue = this.config.getSystemProperties().getPropertyInt(
-						"ngrinder.pertest.bandwidth.limit.megabyte", 128) * 1024 * 1024;
+		long configuredLimit = getLimit();
 		int totalAgentSize = allAttachedAgents.size();
-		limit.set((long) (configValue / ((totalAgentSize - userSpecificAgentCount) / totalAgentSize)));
+		int sharedAgent = (totalAgentSize - userSpecificAgentCount);
+		limit.set((sharedAgent == 0 ? Long.MAX_VALUE
+						: (long) (configuredLimit / (((float) sharedAgent) / totalAgentSize))));
+
+	}
+
+	protected int getLimit() {
+		return this.config.getSystemProperties().getPropertyInt("ngrinder.pertest.bandwidth.limit.megabyte", 128) * 1024 * 1024;
+	}
+
+	protected List<AgentInfo> getLocalAgents() {
+		return agentManagerService.getLocalAgents();
 	}
 
 	/*
