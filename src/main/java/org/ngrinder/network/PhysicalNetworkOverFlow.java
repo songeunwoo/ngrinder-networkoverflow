@@ -35,7 +35,7 @@ public class PhysicalNetworkOverFlow implements OnPeriodicWorkingAgentCheckRunna
 	}
 
 	@Override
-	public void checkAgentSet(Set<AgentStatus> workingAgents) {
+	public void checkWorkingAgent(Set<AgentStatus> workingAgents) {
 		int totalRecieved = 0;
 		int totalSent = 0;
 		if (workingAgents.isEmpty()) {
@@ -43,7 +43,7 @@ public class PhysicalNetworkOverFlow implements OnPeriodicWorkingAgentCheckRunna
 		}
 
 		for (AgentStatus each : workingAgents) {
-			if (StringUtils.containsNone(((AgentControllerIdentityImplementation) each.getAgentIdentity()).getRegion(),
+			if (!StringUtils.contains(((AgentControllerIdentityImplementation) each.getAgentIdentity()).getRegion(),
 							"owned_")) {
 				totalRecieved += each.getSystemDataModel().getRecievedPerSec();
 				totalSent += each.getSystemDataModel().getSentPerSec();

@@ -88,12 +88,14 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 		Long byteSize = intervalStatistics.getValue(longIndex);
 		if (byteSize != null) {
 			if (byteSize > limit.get()) {
-				String message = String.format("TOO MUCH TRAFFIC on this test. STOP IN FORCE.\n"
-								+ "- LIMIT : %d - SENT :%d", UnitUtil.byteCountToDisplaySize(limit.get()),
-								UnitUtil.byteCountToDisplaySize(byteSize));
-				LOGGER.info(message);
-				LOGGER.info("Forcely Stop the test {}", perfTest.getTestIdentifier());
-				perfTestService.markStatusAndProgress(perfTest, Status.ABNORMAL_TESTING, message);
+				if (perfTest.getStatus() != Status.ABNORMAL_TESTING) {
+					String message = String.format("TOO MUCH TRAFFIC on this test. STOP IN FORCE.\n"
+									+ "- LIMIT : %s - SENT :%s", UnitUtil.byteCountToDisplaySize(limit.get()),
+									UnitUtil.byteCountToDisplaySize(byteSize));
+					LOGGER.info(message);
+					LOGGER.info("Forcely Stop the test {}", perfTest.getTestIdentifier());
+					perfTestService.markStatusAndProgress(perfTest, Status.ABNORMAL_TESTING, message);
+				}
 				return;
 			}
 
