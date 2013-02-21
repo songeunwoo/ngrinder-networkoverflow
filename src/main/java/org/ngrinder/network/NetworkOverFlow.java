@@ -1,6 +1,8 @@
 package org.ngrinder.network;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.grinder.common.processidentity.AgentIdentity;
 import net.grinder.statistics.ImmutableStatisticsSet;
@@ -32,7 +34,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NetworkOverFlow.class);
 	private final IConfig config;
 	private IAgentManagerService agentManagerService;
-	private ThreadLocal<Long> limit = new ThreadLocal<Long>();
+	private Map<Long, Long> limitMap = new ConcurrentHashMap<Long, Long>();
 
 	public NetworkOverFlow(IConfig config, IAgentManagerService agentManagerService) {
 		this.config = config;
@@ -59,8 +61,9 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 		long configuredLimit = getLimit();
 		int totalAgentSize = allAttachedAgents.size();
 		int sharedAgent = (totalAgentSize - userSpecificAgentCount);
-		limit.set((sharedAgent == 0 ? Long.MAX_VALUE
-						: (long) (configuredLimit / (((float) sharedAgent) / totalAgentSize))));
+		long realLimit = sharedAgent == 0 ? Long.MAX_VALUE
+						: (long) (configuredLimit / (((float) sharedAgent) / totalAgentSize));
+		limitMap.put(perfTest.getId(), realLimit);
 
 	}
 
@@ -87,10 +90,11 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 						StatisticsIndexMap.HTTP_PLUGIN_RESPONSE_LENGTH_KEY);
 		Long byteSize = intervalStatistics.getValue(longIndex);
 		if (byteSize != null) {
-			if (byteSize > limit.get()) {
+			Long limit = limitMap.get(perfTest.getId());
+			if (byteSize > limit) {
 				if (perfTest.getStatus() != Status.ABNORMAL_TESTING) {
 					String message = String.format("TOO MUCH TRAFFIC by this test. STOP BY FORCE.\n"
-									+ "- LIMIT : %s - SENT :%s", UnitUtil.byteCountToDisplaySize(limit.get()),
+									+ "- LIMIT : %s - SENT :%s", UnitUtil.byteCountToDisplaySize(limit),
 									UnitUtil.byteCountToDisplaySize(byteSize));
 					LOGGER.info(message);
 					LOGGER.info("Forcely Stop the test {}", perfTest.getTestIdentifier());
@@ -111,7 +115,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 	 */
 	@Override
 	public void endSampling(ISingleConsole singleConsole, PerfTest perfTest, IPerfTestService perfTestService) {
-		limit.remove();
+		limitMap.remove(perfTest.getId());
 	}
 
 }
