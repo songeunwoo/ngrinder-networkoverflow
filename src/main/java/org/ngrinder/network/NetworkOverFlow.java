@@ -91,7 +91,7 @@ public class NetworkOverFlow implements OnTestSamplingRunnable {
 		Long byteSize = intervalStatistics.getValue(longIndex);
 		if (byteSize != null) {
 			Long limit = limitMap.get(perfTest.getId());
-			if (byteSize > limit) {
+			if (byteSize != null && byteSize > limit) {
 				if (perfTest.getStatus() != Status.ABNORMAL_TESTING) {
 					String message = String.format("TOO MUCH TRAFFIC by this test. STOP BY FORCE.\n"
 									+ "- LIMIT : %s - SENT :%s", UnitUtil.byteCountToDisplaySize(limit),
