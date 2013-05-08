@@ -1,12 +1,18 @@
 ngrinder-networkoverflow
 ========================
 
-ngrinder network overflow blocking plugin
+nGridner network overflow blocking plugin. 
+Some test case can causes a lot of traffic which the network may not handle and crash the other systems existing in the same network.
+This plugin provides a limitation on the total bandwidth and per test bandwidth usage so it shutdowns the tests by force which threaten the network stability.
 
-This is a sample plugin for nGrinder. networoverflow blocks the performance test which loads too much traffic on the network.
+You can build ngrinder networkoverflow plugin with atlas-package command provided by atlassian plugin SDK .
 
-You can build this with atlassian plugin SDK.
+* atlas-package 
 
-* run atlas-package
+Then copy a jar file in the target folder into ${NGRINDER_HOME}/plugins folder.
 
-This plugin is compatible with nGrinder 3.0.3
+There are two options a user can set in the system.conf.
+* ngrinder.bandwidth.limit.megabyte - total ngrinder using bandwidth limit in the unit of *mega byte*. The default value is 128 = 1Gbps 
+* ngrinder.pertest.bandwidth.limit.megabyte - per test bandwidth limit in the unit of *mega byte*. The default value is 128 = 1Gbps 
+
+This plugin is compatible with nGrinder 3.0.3 or above
