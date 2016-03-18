@@ -5,45 +5,67 @@
 	<artifactId>ngrinder-networkoverflow</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
 	<name>ngrinder-networkoverflow</name>
-	<packaging>atlassian-plugin</packaging>
+	<description>ngrinder-networkoverflow Plugin Framework for Java</description>
+	
+	<licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
+    <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.7</java.version>
+		<ngrinder.core.version>3.3</ngrinder.core.version>
+        <plugin.id>ngrinder-networkoverflow</plugin.id>
+        <plugin.class>org.ngrinder.network.PhysicalNetworkOverFlow</plugin.class>
+        <plugin.version>4.0.0</plugin.version>
+        <plugin.provider>NAVER</plugin.provider>
+        <plugin.dependencies />
+    </properties>
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.atlassian.maven.plugins</groupId>
-				<artifactId>maven-amps-plugin</artifactId>
-				<version>3.10.1</version>
-				<extensions>true</extensions>
-				<configuration>
-					<products>
-						<product>
-							<id>refapp</id>
-							<version>3.10.1</version>
-						</product>
-					</products>
-				</configuration>
-			</plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>unzip jar file</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <unzip src="target/${artifactId}-${version}.${packaging}" dest="target/classes" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Plugin-Id>${plugin.id}</Plugin-Id>
+                            <Plugin-Class>${plugin.class}</Plugin-Class>
+                            <Plugin-Version>${plugin.version}</Plugin-Version>
+                            <Plugin-Provider>${plugin.provider}</Plugin-Provider>
+                            <Plugin-Dependencies>${plugin.dependencies}</Plugin-Dependencies>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>atlassian.maven.repo</id>
-			<name>atlassian.maven.repo</name>
-			<url>https://maven.atlassian.com/repository/public</url>
-		</pluginRepository>
-	</pluginRepositories>
+	
 	<repositories>
-		<repository>
-			<id>atlassian.maven.repo</id>
-			<name>atlassian.maven.repo</name>
-			<url>https://maven.atlassian.com/repository/public</url>
-		</repository>
 		<repository>
 			<id>maven-repo</id>
 			<name>Official Repository</name>
@@ -59,7 +81,7 @@
 		<dependency>
 			<groupId>org.ngrinder</groupId>
 			<artifactId>ngrinder-core</artifactId>
-			<version>3.3</version>
+			<version>${ngrinder.core.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -91,6 +113,17 @@
 			<artifactId>junit-dep</artifactId>
 			<version>4.8.2</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ro.fortsoft.pf4j</groupId>
+			<artifactId>pf4j</artifactId>
+			<version>0.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>4.1.1.RELEASE</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
