@@ -9,12 +9,9 @@ This plugin provides a limitation on the total bandwidth and per test bandwidth 
 
 Build
 =====
-You can build ngrinder networkoverflow plugin with atlas-package command provided by atlassian plugin SDK .
-
-* atlas-package 
-
-Then copy a jar file in the target folder into ${NGRINDER_HOME}/plugins folder.
-This plugin is compatible with nGrinder 3.0.3 or above
+You can build ngrinder networkoverflow plugin with Plugin Framework for Java.
+Then copy a target/classes file in the target folder into ${NGRINDER_HOME}/plugins folder.
+This plugin is compatible with nGrinder 3.0.3 or above.
 
 Configuration
 =============
